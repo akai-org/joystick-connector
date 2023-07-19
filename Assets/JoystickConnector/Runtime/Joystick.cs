@@ -110,13 +110,13 @@ public static class Joystick
     public delegate void OnPlayerMoved(int id, byte action);
     public delegate void OnWebsocketError(string error);
 
-    public static OnCodeAcquired onCodeAcquired;
-    public static OnError onError;
-    public static OnWebsocketOpen onWebsocketOpen;
-    public static OnWebsocketMessage onWebsocketMessage;
-    public static OnPlayerJoined onPlayerJoined;
-    public static OnPlayerMoved onPlayerMoved;
-    public static OnWebsocketError onWebsocketError;
+    public static OnCodeAcquired onCodeAcquired = delegate { };
+    public static OnError onError = delegate { };
+    public static OnWebsocketOpen onWebsocketOpen = delegate { };
+    public static OnWebsocketMessage onWebsocketMessage = delegate { };
+    public static OnPlayerJoined onPlayerJoined = delegate { };
+    public static OnPlayerMoved onPlayerMoved = delegate { };
+    public static OnWebsocketError onWebsocketError = delegate { };
 
     static NativeWebSocket.WebSocket _websocket;
     static readonly HttpClient client = new();
@@ -194,12 +194,26 @@ public static class Joystick
                 onError(new Exception($"Could not find a button with the value of: {action}"));
                 return;
             }
-            player.SetButton((GameControls)modifiedAction, false);
-            onPlayerMoved((int)userId, action);
+            player.SetButton((GameControls)modifiedAction, true);
+            onPlayerMoved(userId, action);
             return;
         }
-        player.SetButton((GameControls)action, true);
-        onPlayerMoved((int)userId, action);
+        player.SetButton((GameControls)action, false);
+        onPlayerMoved(userId, action);
+    }
+
+    public static bool GetButton(int playerId, GameControls gameControl)
+    {
+        if(!_players.TryGetValue(playerId, out PlayerData player))
+        {
+            onError(new Exception("Could not find a player with such an id"));
+        }
+
+        if(!player.controls.TryGetValue(gameControl, out bool buttonState))
+        {
+            onError(new Exception("Could not find a button with such an id"));
+        }
+        return buttonState;
     }
 
     private static void HandleGameEvent(byte[] bytes)
@@ -216,11 +230,8 @@ public static class Joystick
 
     public static void Update()
     {
-        #if !UNITY_WEBGL || UNITY_EDITOR
-            if (_websocket != null)
-            {
-                _websocket.DispatchMessageQueue();
-            }
+#if !UNITY_WEBGL || UNITY_EDITOR
+        _websocket?.DispatchMessageQueue();
         #endif
     }
 

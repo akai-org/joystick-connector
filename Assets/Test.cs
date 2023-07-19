@@ -16,12 +16,20 @@ public class Test : MonoBehaviour
         {
             print(e);
         };
+        Joystick.onPlayerJoined += (id, nickname) =>
+        {
+            print($"Player with nickname: {nickname} and id {id} joined the game");
+        };
+        Joystick.onPlayerMoved += (id, action) =>
+        {
+            print($"Player with id {id} performed action: {action}");
+        };
         await Joystick.Begin(new JoystickConfig() { port = "8081", isSecure = false});
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        Joystick.Update();
     }
 }
