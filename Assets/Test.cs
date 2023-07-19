@@ -5,6 +5,9 @@ using UnityEngine;
 
 public class Test : MonoBehaviour
 {
+    [SerializeField]
+    public Player prefab;
+    public List<Player> players = new();
     // Start is called before the first frame update
     async void Start()
     {
@@ -19,6 +22,10 @@ public class Test : MonoBehaviour
         Joystick.onPlayerJoined += (id, nickname) =>
         {
             print($"Player with nickname: {nickname} and id {id} joined the game");
+            var player = Instantiate(prefab, Vector3.zero, Quaternion.identity);
+            player.id = id;
+            player.userName = nickname;
+            players.Add(player);
         };
         Joystick.onPlayerMoved += (id, action) =>
         {
