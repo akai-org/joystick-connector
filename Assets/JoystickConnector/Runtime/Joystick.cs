@@ -108,6 +108,7 @@ public static class Joystick
     public delegate void OnWebsocketMessage(byte[] bytes);
     public delegate void OnPlayerJoined(int id, string nickname);
     public delegate void OnPlayerMoved(int id, byte action);
+    public delegate void OnWebsocketError(string error);
 
     public static OnCodeAcquired onCodeAcquired;
     public static OnError onError;
@@ -115,6 +116,7 @@ public static class Joystick
     public static OnWebsocketMessage onWebsocketMessage;
     public static OnPlayerJoined onPlayerJoined;
     public static OnPlayerMoved onPlayerMoved;
+    public static OnWebsocketError onWebsocketError;
 
     static NativeWebSocket.WebSocket _websocket;
     static readonly HttpClient client = new();
@@ -140,6 +142,10 @@ public static class Joystick
             _websocket.OnOpen += async () => await HandleWebsocketOpen(roomCode);
 
             _websocket.OnMessage += HandleWebsocketMessage;
+
+            _websocket.OnError += (error) => onWebsocketError(error);
+
+            await _websocket.Connect();
         }
         catch (Exception e)
         {
@@ -160,7 +166,7 @@ public static class Joystick
     {
         if(bytes.Length == 2)
         {
-
+            HandleIncomingControls(bytes);
 
         } else
         {
@@ -205,6 +211,24 @@ public static class Joystick
             string nickname = wsEvent.nickname;
             _players.Add(playerId, new PlayerData(playerId, nickname));
             onPlayerJoined(playerId, nickname);
+        }
+    }
+
+    public static void Update()
+    {
+        #if !UNITY_WEBGL || UNITY_EDITOR
+            if (_websocket != null)
+            {
+                _websocket.DispatchMessageQueue();
+            }
+        #endif
+    }
+
+    public async static Task GameOver()
+    {
+        if (_websocket != null)
+        {
+            await _websocket.Close();
         }
     }
 }
