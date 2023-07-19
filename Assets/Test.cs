@@ -2,10 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Test : MonoBehaviour
 {
-    [SerializeField]
     public Player prefab;
     public List<Player> players = new();
     // Start is called before the first frame update
@@ -38,5 +38,19 @@ public class Test : MonoBehaviour
     void Update()
     {
         Joystick.Update();
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            SceneManager.LoadScene("second_scene");
+        }
+    }
+
+    void Awake()
+    {
+        DontDestroyOnLoad(transform.gameObject);
+    }
+
+    private async void OnApplicationQuit()
+    {
+        await Joystick.GameOver();
     }
 }

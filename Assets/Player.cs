@@ -8,7 +8,7 @@ public class Player : MonoBehaviour
     public string userName { get; set; }
 
     [SerializeField]
-    float speed = .1f;
+    float speed = 16.25f;
 
     void FixedUpdate()
     {
