@@ -31,7 +31,15 @@ public class Test : MonoBehaviour
         {
             print($"Player with id {id} performed action: {action}");
         };
-        await Joystick.Begin(new JoystickConfig() { port = "8081", isSecure = false});
+        Joystick.onPlayerRemoved += (id, nickname) =>
+        {
+            print($"Player {nickname} with id {id} was removed");
+            var playerIndex = players.FindIndex(p => p.id == id);
+            var player = players[playerIndex];
+            players.RemoveAt(playerIndex);
+            Destroy(player.gameObject);
+        };
+        await Joystick.Begin(new JoystickConfig() { isSecure = false, port = "8081"});
     }
 
     // Update is called once per frame

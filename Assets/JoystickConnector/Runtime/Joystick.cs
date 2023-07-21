@@ -70,6 +70,7 @@ public enum ControlState : byte
 public static class GameEvent
 {
     public static readonly string PlayerJoined = "player_added";
+    public static readonly string PlayerRemoved = "player_removed";
 }
 
 public class PlayerData
@@ -107,6 +108,7 @@ public static class Joystick
     public delegate void OnWebsocketOpen();
     public delegate void OnWebsocketMessage(byte[] bytes);
     public delegate void OnPlayerJoined(int id, string nickname);
+    public delegate void OnPlayerRemoved(int id, string nickname);
     public delegate void OnPlayerMoved(int id, byte action);
     public delegate void OnWebsocketError(string error);
 
@@ -117,6 +119,7 @@ public static class Joystick
     public static OnPlayerJoined onPlayerJoined = delegate { };
     public static OnPlayerMoved onPlayerMoved = delegate { };
     public static OnWebsocketError onWebsocketError = delegate { };
+    public static OnPlayerRemoved onPlayerRemoved = delegate { };
 
     static NativeWebSocket.WebSocket _websocket;
     static readonly HttpClient client = new();
@@ -225,6 +228,13 @@ public static class Joystick
             string nickname = wsEvent.nickname;
             _players.Add(playerId, new PlayerData(playerId, nickname));
             onPlayerJoined(playerId, nickname);
+        }
+        else if(wsEvent.event_name == GameEvent.PlayerRemoved)
+        {
+            int playerId = wsEvent.id;
+            string nickname = wsEvent.nickname;
+            _players.Remove(playerId);
+            onPlayerRemoved(playerId, nickname);
         }
     }
 
