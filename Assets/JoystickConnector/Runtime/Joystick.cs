@@ -4,11 +4,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.WebSockets;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.XR;
 using static UnityEditor.Experimental.GraphView.GraphView;
@@ -167,7 +169,7 @@ public static class Joystick
 
     private static void HandleWebsocketMessage(byte[] bytes)
     {
-        if(bytes.Length == 2)
+        if(bytes.Length == 3)
         {
             HandleIncomingControls(bytes);
 
@@ -180,7 +182,8 @@ public static class Joystick
     private static void HandleIncomingControls(byte[] bytes)
     {
         var userId = bytes[0];
-        var action = bytes[1];
+        var commandType = bytes[1];
+        var action = bytes[2];
 
         PlayerData player;
         if (!_players.TryGetValue(userId, out player))
@@ -188,7 +191,22 @@ public static class Joystick
             onError(new Exception("Could not find a user with such an id"));
             return;
         }
+        switch (commandType)
+        {
+            case 0:
+                HandleButtonAction(player, action);
+                break;
+        }
+        
+    }
 
+    /*
+     This one requires some explanation. 
+    Every button's pressed & unpressed state is unique, 
+    so we only need to check max two combinations to get proper button
+     */
+    private static void HandleButtonAction(PlayerData player, byte action)
+    {
         if (!player.controls.TryGetValue((GameControls)action, out _))
         {
             var modifiedAction = action - 1;
@@ -198,11 +216,11 @@ public static class Joystick
                 return;
             }
             player.SetButton((GameControls)modifiedAction, true);
-            onPlayerMoved(userId, action);
+            onPlayerMoved(player.id, action);
             return;
         }
         player.SetButton((GameControls)action, false);
-        onPlayerMoved(userId, action);
+        onPlayerMoved(player.id, action);
     }
 
     public static bool GetButton(int playerId, GameControls gameControl)
