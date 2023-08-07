@@ -63,10 +63,28 @@ public enum GameControls : byte
     ActionButton4 = 7 << 1
 }
 
+public enum AnalogControls
+{
+    Left,
+    Right
+}
+
 public enum ControlState : byte
 {
     KeyUp,
     KeyDown
+}
+
+public enum AnalogBits: byte
+{
+    Angle0 = 1,
+    Angle1 = 2,
+    Angle2 = 4,
+    Angle3 = 8,
+    Angle4 = 16,
+    Angle5 = 32,
+    Drag0 = 64,
+    Drag1 = 128,
 }
 
 public static class GameEvent
@@ -79,17 +97,22 @@ public class PlayerData
 {
     public string nickname { get; private set; }
     public int id { get; private set; }
-    public PlayerData(int id, string nickname) { 
+    public PlayerData(int id, string nickname) {
         this.nickname = nickname;
         this.id = id;
     }
 
-    readonly Dictionary<GameControls, bool> _controls = new Dictionary<GameControls, bool>() 
-    { 
+    readonly Dictionary<GameControls, bool> _controls = new Dictionary<GameControls, bool>()
+    {
         { GameControls.ArrowUp, false },
         { GameControls.ArrowDown, false },
         { GameControls.ArrowLeft, false },
-        { GameControls.ArrowRight, false } 
+        { GameControls.ArrowRight, false }
+    };
+
+    readonly Dictionary<AnalogControls, byte> _analogControls = new() {
+        {AnalogControls.Left, 0},
+        {AnalogControls.Right, 0}
     };
 
     public Dictionary<GameControls, bool> controls { get { return _controls; } }
@@ -97,10 +120,22 @@ public class PlayerData
     public bool GetButton(GameControls button) { 
         return _controls[button];
     }
+
     public void SetButton(GameControls button, bool value)
     {
         _controls[button] = value;
     }
+
+    public void SetAnalog(AnalogControls analog, byte action)
+    {
+        _analogControls[analog] = action;
+    }
+
+    public byte GetAnalog(AnalogControls analog)
+    {
+        return _analogControls[analog];
+    }
+
 }
 
 public static class Joystick
@@ -191,13 +226,30 @@ public static class Joystick
             onError(new Exception("Could not find a user with such an id"));
             return;
         }
-        switch (commandType)
+        switch (commandType) 
         {
             case 0:
                 HandleButtonAction(player, action);
                 break;
+            case 1:
+                HandleJoystickAction(player, AnalogControls.Left, action);
+                break;
+            case 2:
+                HandleJoystickAction(player, AnalogControls.Right, action);
+                break;
         }
         
+    }
+
+    private static void HandleJoystickAction(PlayerData player, AnalogControls analog, byte action)
+    {
+        player.SetAnalog(analog, action);
+        var angleResolution = Math.Round(200 * Math.PI) / (Math.Pow(2, 6) - 1);
+        var drag = action & (byte)(AnalogBits.Drag0 | AnalogBits.Drag1);
+        var angle = action - drag;
+        var angleInRadians = angle * angleResolution / 100;
+        var parsedDrag = drag >> 6;
+        onPlayerMoved(player.id, (byte)angleInRadians);
     }
 
     /*
@@ -235,6 +287,35 @@ public static class Joystick
             onError(new Exception("Could not find a button with such an id"));
         }
         return buttonState;
+    }
+
+    public static float GetAnalogHorizontal(int playerId, AnalogControls analog)
+    {
+        if (!_players.TryGetValue(playerId, out PlayerData player))
+        {
+            onError(new Exception("Could not find a player with such an id"));
+        }
+        var angleResolution = Math.Round(200 * Math.PI) / (Math.Pow(2, 6) - 1);
+        var control = player.GetAnalog(analog);
+        var drag = control & (byte)(AnalogBits.Drag0 | AnalogBits.Drag1);
+        var angle = control - drag;
+        var angleInRadians = angle * angleResolution / 100;
+        var parsedDrag = drag >> 6;
+        return (float)(parsedDrag * Math.Cos(angleInRadians));
+    }
+    public static float GetAnalogVertical(int playerId, AnalogControls analog)
+    {
+        if (!_players.TryGetValue(playerId, out PlayerData player))
+        {
+            onError(new Exception("Could not find a player with such an id"));
+        }
+        var angleResolution = Math.Round(200 * Math.PI) / (Math.Pow(2, 6) - 1);
+        var control = player.GetAnalog(analog);
+        var drag = control & (byte)(AnalogBits.Drag0 | AnalogBits.Drag1);
+        var angle = control - drag;
+        var angleInRadians = angle * angleResolution / 100;
+        var parsedDrag = drag >> 6;
+        return (float)(parsedDrag * Math.Sin(angleInRadians));
     }
 
     private static void HandleGameEvent(byte[] bytes)

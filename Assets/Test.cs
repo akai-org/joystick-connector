@@ -39,7 +39,10 @@ public class Test : MonoBehaviour
             players.RemoveAt(playerIndex);
             Destroy(player.gameObject);
         };
-        await Joystick.Begin(new JoystickConfig() { isSecure = false, port = "8081"});
+        Joystick.onWebsocketError += (string msg) => {
+            print($"Websocket error: {msg}");
+        };
+        await Joystick.Begin(new JoystickConfig() { isSecure = false, port = "8081", gui = "Joystick"});
     }
 
     // Update is called once per frame
