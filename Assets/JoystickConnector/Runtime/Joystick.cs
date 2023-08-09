@@ -16,7 +16,7 @@ public class JoystickConfig
 
 public static class Joystick
 {
-    static readonly CommsBase comms = new Comms();
+    static CommsBase comms = new Comms();
     public static OnCodeAcquired onCodeAcquired = delegate { };
     public static OnError onError = delegate { };
     public static OnWebsocketOpen onWebsocketOpen = delegate { };
@@ -25,6 +25,12 @@ public static class Joystick
     public static OnPlayerMoved onPlayerMoved = delegate { };
     public static OnWebsocketError onWebsocketError = delegate { };
     public static OnPlayerRemoved onPlayerRemoved = delegate { };
+
+    // to change comms for testing purpose - i hope that it'll work
+    internal static void SetCustomComms(CommsBase customComms)
+    {
+        comms = customComms;
+    }
 
     static void SetupExternalComs()
     {
