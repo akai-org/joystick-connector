@@ -295,11 +295,11 @@ public static class Joystick
         {
             onError(new Exception("Could not find a player with such an id"));
         }
-        var angleResolution = Math.Round(200 * Math.PI) / (Math.Pow(2, 6) - 1);
+        var angleResolution = 2 * Math.Round(Math.PI, 3) / ((1 << 6) - 1);
         var control = player.GetAnalog(analog);
         var drag = control & (byte)(AnalogBits.Drag0 | AnalogBits.Drag1);
         var angle = control - drag;
-        var angleInRadians = angle * angleResolution / 100;
+        var angleInRadians = angle * angleResolution;
         var parsedDrag = drag >> 6;
         return (float)(parsedDrag * Math.Cos(angleInRadians));
     }
@@ -309,11 +309,11 @@ public static class Joystick
         {
             onError(new Exception("Could not find a player with such an id"));
         }
-        var angleResolution = Math.Round(200 * Math.PI) / (Math.Pow(2, 6) - 1);
+        var angleResolution = 2 * Math.Round(Math.PI, 3) / ((1 << 6) - 1);
         var control = player.GetAnalog(analog);
         var drag = control & (byte)(AnalogBits.Drag0 | AnalogBits.Drag1);
         var angle = control - drag;
-        var angleInRadians = angle * angleResolution / 100;
+        var angleInRadians = angle * angleResolution;
         var parsedDrag = drag >> 6;
         return (float)(parsedDrag * Math.Sin(angleInRadians));
     }

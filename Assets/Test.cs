@@ -42,7 +42,7 @@ public class Test : MonoBehaviour
         Joystick.onWebsocketError += (string msg) => {
             print($"Websocket error: {msg}");
         };
-        await Joystick.Begin(new JoystickConfig() { isSecure = false, port = "8081", gui = "Joystick"});
+        await Joystick.Begin(new JoystickConfig() { isSecure = false, port = "8081", gui = "SingleJoystick"});
     }
 
     // Update is called once per frame
