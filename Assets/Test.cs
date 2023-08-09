@@ -45,6 +45,7 @@ public class Test : MonoBehaviour
         await Joystick.Begin(new JoystickConfig() { isSecure = false, port = "8081", gui = "SingleJoystick"});
     }
 
+
     // Update is called once per frame
     void Update()
     {
