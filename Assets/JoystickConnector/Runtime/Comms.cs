@@ -23,9 +23,8 @@ internal static class GameEvent
     public static readonly string PlayerRemoved = "player_removed";
 }
 
-internal class Comms
+internal abstract class CommsBase
 {
-
     public OnCodeAcquired onCodeAcquired = delegate { };
     public OnError onError = delegate { };
     public OnWebsocketOpen onWebsocketOpen = delegate { };
@@ -34,19 +33,29 @@ internal class Comms
     public OnPlayerMoved onPlayerMoved = delegate { };
     public OnWebsocketError onWebsocketError = delegate { };
     public OnPlayerRemoved onPlayerRemoved = delegate { };
-    NativeWebSocket.WebSocket _websocket;
-    public NativeWebSocket.WebSocket Websocket => _websocket;
-    readonly PlayersManager _playersManager = new();
-    readonly Controls _controls;
-    public Controls Controls => _controls;
 
+    protected Controls _controls;
+    readonly protected HttpClient client = new();
+    public Controls Controls => _controls;
+    protected NativeWebSocket.WebSocket _websocket;
+    public NativeWebSocket.WebSocket Websocket => _websocket;
+    readonly protected PlayersManager _playersManager = new();
+
+    public abstract Task Connect(string httpUrl, StringContent data, string wsUrl);
+    protected abstract Task HandleWebsocketOpen(string roomCode);
+    protected abstract void HandleWebsocketMessage(byte[] bytes);
+    protected abstract void HandleGameEvent(byte[] bytes);
+    public abstract void Update();
+    public abstract Task Disconnect();
+}
+
+internal class Comms : CommsBase
+{
     public Comms() {
         _controls = new(_playersManager);
     }
 
-    readonly HttpClient client = new();
-
-    public async Task Connect(string httpUrl, StringContent data, string wsUrl)
+    public async override Task Connect(string httpUrl, StringContent data, string wsUrl)
     {
         var res = await client.PostAsync(httpUrl, data);
         var resData = await res.Content.ReadAsStringAsync();
@@ -64,7 +73,7 @@ internal class Comms
         await _websocket.Connect();
     }
 
-    private async Task HandleWebsocketOpen(string roomCode)
+    protected async override Task HandleWebsocketOpen(string roomCode)
     {
         onWebsocketOpen();
 
@@ -73,7 +82,7 @@ internal class Comms
         await _websocket.SendText(returnCode);
     }
 
-    private void HandleWebsocketMessage(byte[] bytes)
+    protected override void HandleWebsocketMessage(byte[] bytes)
     {
         if (bytes.Length == 3)
         {
@@ -94,7 +103,7 @@ internal class Comms
         }
     }
 
-    private void HandleGameEvent(byte[] bytes)
+    protected override void HandleGameEvent(byte[] bytes)
     {
         var wsEvent = JsonUtility.FromJson<EventDto>(Encoding.UTF8.GetString(bytes));
         if (wsEvent.event_name == GameEvent.PlayerJoined)
@@ -113,14 +122,14 @@ internal class Comms
         }
     }
 
-    public void Update()
+    public override void Update()
     {
 #if !UNITY_WEBGL || UNITY_EDITOR
         _websocket?.DispatchMessageQueue();
 #endif
     }
 
-    public async Task Disconnect()
+    public async override Task Disconnect()
     {
         if (_websocket != null)
         {

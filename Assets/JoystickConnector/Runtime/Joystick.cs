@@ -16,7 +16,7 @@ public class JoystickConfig
 
 public static class Joystick
 {
-    static readonly Comms comms = new();
+    static readonly CommsBase comms = new Comms();
     public static OnCodeAcquired onCodeAcquired = delegate { };
     public static OnError onError = delegate { };
     public static OnWebsocketOpen onWebsocketOpen = delegate { };
