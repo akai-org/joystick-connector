@@ -293,6 +293,9 @@ PublishScripts/
 *.nuget.props
 *.nuget.targets
 
+!**/[Pp]ackages/manifest.json
+!**/[Pp]ackages/packages-lock.json
+
 # Microsoft Azure Build Output
 csx/
 *.build.csdef

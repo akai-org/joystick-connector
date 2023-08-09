@@ -1,0 +1,11 @@
+{
+    "name": "org.akai.joystick-connector",
+    "version": "0.0.1",
+    "displayName": "Joystick Connector",
+    "description": "A package to easily connect your game to a joystick platform",
+    "repoUrl": "https://github.com/akai-org/joystick-connector",
+    "licenseSpdxId": "MIT",
+    "licenseName": "MIT License",
+    "readme": "main:Assets/org.akai.joystick-connector/README.md",
+    "hunter": "SafeHeaded"
+}
