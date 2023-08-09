@@ -17,7 +17,11 @@ internal class PlayerData
         { GameControls.ArrowUp, false },
         { GameControls.ArrowDown, false },
         { GameControls.ArrowLeft, false },
-        { GameControls.ArrowRight, false }
+        { GameControls.ArrowRight, false },
+        { GameControls.ActionButton1, false },
+        { GameControls.ActionButton2, false },
+        { GameControls.ActionButton3, false },
+        { GameControls.ActionButton4, false },
     };
 
     readonly Dictionary<AnalogControls, byte> _analogControls = new() {
